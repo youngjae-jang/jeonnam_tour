@@ -1,6 +1,7 @@
 """개별 관광지 카드 및 선택 상세정보."""
 import streamlit as st
 from state import toggle_favorite, select_tour
+from services.restaurant_search import restaurant_search_urls
 
 def render_cards(df, show_n):
     st.subheader('🏝️ 관광지 둘러보기')
@@ -35,6 +36,10 @@ def render_detail(df):
         st.write('**주소:**',r['addr1'])
         st.write('**지역 / 유형:**',r['region'],'/',r['category'],'/',r['subcategory'])
         st.write('**관광지 ID:**',r['contentid'])
+        st.markdown('**주변 맛집 찾기**')
+        st.caption('선택한 관광지 주소를 기준으로 지도에서 주변 음식점을 검색합니다.')
+        for label, url in restaurant_search_urls(r.to_dict()).items():
+            st.link_button(f'{label}에서 주변 맛집 검색', url, use_container_width=True)
         if r['firstimage']: st.image(r['firstimage'],width=480)
         if str(r.get('description','')).strip(): st.write(r['description'])
         else: st.caption('원본 데이터에 상세 소개가 없어 기본 정보만 표시합니다.')
