@@ -23,22 +23,24 @@ python -m pytest --cov=data_service --cov=state --cov=services --cov-report=term
 | `tests/test_state.py` | 상태 초기화·기존 값 보존·필터 리셋·즐겨찾기 토글·선택 관광지 테스트 |
 | `tests/test_validation_extended.py` | 필수 컬럼별 예외, 좌표 경계/NaN/0, 품질 요약 및 빈 데이터 테스트 |
 | `tests/test_data_loading.py` | CSV 파일 생성·로딩·전처리·누락 컬럼·잘못된 좌표·사진 URL·인코딩 대체 처리 테스트 |
+| `tests/test_tour_data.py` | Streamlit 비의존 데이터 서비스와 새 분류 코드 처리 테스트 |
+| `tests/test_restaurant_api.py` | 카카오 API 요청 파라미터·응답 정규화·오류 처리 테스트 (네트워크 호출 없이 mock 사용) |
+| `tests/test_ui_detail.py` | Streamlit `AppTest`로 상세 보기 표시와 필터 제외 시 선택 해제 확인 |
 
 ## 4. 테스트 원리
 `test_`로 시작하는 함수는 pytest가 자동 수집합니다. 각 테스트는 대상 함수를 호출한 다음 `assert`로 예상 결과를 검증합니다. `@pytest.mark.parametrize`는 하나의 테스트 함수에 여러 입력을 자동 대입하므로 테스트 개수가 증가합니다. `tmp_path`는 임시 CSV 파일을 만들고 자동 정리합니다. `monkeypatch`로 세션을 격리해 테스트끼리 간섭하지 않도록 합니다.
 
 ## 5. 기준 결과
-- 전체 53개 통과 (2026-10-24, 실행 환경 Python 3.13)
-- `data_service.py`, `state.py`, `services/`의 **측정된 문장 커버리지 100%**
-- 해당 수치는 지정한 순수 로직 모듈만 포함하며 Streamlit 화면, 지도 UI, 실제 브라우저 클릭 및 네트워크를 테스트하지 않습니다.
-- 기존 프로젝트 구현 로직은 변경하지 않았습니다.
+- 기준 결과는 현재 환경에서 다시 실행해 갱신합니다.
+- 커버리지 명령은 지정 모듈만 측정하며 Streamlit 전체 화면과 실제 지도 UI는 포함하지 않습니다.
+- Kakao API 테스트는 HTTP 응답을 mock 처리해 네트워크 요청이나 유효한 API 키 없이 실행합니다.
 
 ## 6. 새로운 기능 추가 시
 1. 기대하는 입출력과 경계 사례를 결정합니다.
 2. 관련 `tests/test_*.py`에 fixture와 test 함수를 추가합니다.
 3. `python -m pytest -q`로 전체 회귀 테스트를 실행합니다.
 4. 실패 원인이 기대값 오류인지 실제 코드 문제인지 구분합니다.
-5. Streamlit 웹 화면에서 버튼/지도/이미지까지 수동으로 확인합니다.
+5. AppTest는 상세보기 상태를 검사하고, 지도·이미지는 Streamlit 화면에서 수동으로 확인합니다.
 
-## 7. 향후 추가 테스트
-Streamlit `AppTest`를 활용한 렌더링·위젯 상태 테스트, Folium 지도 팝업의 통합 테스트, GitHub Actions CI를 추가할 수 있습니다. 현재 번들은 화면 테스트가 없는 단위/데이터 회귀 테스트입니다.
+## 7. UI 테스트 범위
+`AppTest`는 상세 보기 컴포넌트를 작은 테스트 앱에서 렌더링해 선택된 관광지 표시와 필터 제외 시 선택 해제를 검사합니다. 실제 Kakao API와 지도 서비스는 호출하지 않습니다.

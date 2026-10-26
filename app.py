@@ -1,6 +1,6 @@
 """전남 관광 대시보드 실행 진입점. 함수 호출 순서만 관리."""
 import streamlit as st
-from config import DATA_FILE
+from config import DATA_FILE, get_restaurant_api_key
 from data_service import load_data,apply_filters
 from state import init_filter_state
 from filters import render_sidebar
@@ -40,7 +40,13 @@ def main():
         render_cards(filtered,st.session_state.show_n)
         render_table(filtered)
         
-    render_detail(df)
+    # 상세 보기는 현재 필터 결과에 포함된 관광지만 대상으로 한다.
+    # 비밀키는 화면에 출력하지 않고 맛집 검색 컴포넌트에만 전달한다.
+    try:
+        secrets = st.secrets
+    except Exception:
+        secrets = None
+    render_detail(filtered, get_restaurant_api_key(secrets))
 
 if __name__=='__main__':
     main()

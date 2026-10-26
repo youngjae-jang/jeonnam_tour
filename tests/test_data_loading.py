@@ -28,7 +28,7 @@ def test_load_keeps_invalid_coordinates_but_converts_to_nan(tmp_path):
     df=load_data(str(path),path.stat().st_mtime_ns)
     row=df.iloc[0]
     assert row.region=='지역 미상'
-    assert row.category=='기타'
+    assert row.category=='미분류 (???)'
     assert pd.isna(row.latitude) and pd.isna(row.longitude)
     assert row.firstimage==''
 

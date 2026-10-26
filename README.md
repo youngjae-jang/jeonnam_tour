@@ -5,8 +5,11 @@
 ## 구조
 
 - `app.py` — 진입점: 로딩 → 세션 → 필터 → 화면 실행
-- `config.py` — 경로 / 관광분류 / 기본 필터 / CSS
-- `data_service.py` — 캐시 로드, 정규화, 검색·정렬·필터
+- `config.py` — 경로 / 관광분류 / 기본 필터 / CSS / 맛집 검색 설정
+- `data_service.py` — Streamlit 캐시 어댑터
+- `services/tour_data.py` — UI와 분리된 CSV 정규화·검색·정렬·필터
+- `services/restaurant_api.py` — 카카오 로컬 음식점 반경 검색
+- `services/restaurant_search.py` — 네이버·카카오 지도 검색 링크 생성
 - `state.py` — 세션 초기화, 전체 필터 초기화, 즐겨찾기와 관광지 선택
 - `filters.py` — 사이드바 위젯
 - `views.py` — 지표·차트·품질 점검·다운로드
@@ -14,6 +17,7 @@
 - `services/statistics.py` — 집계
 - `components/map_view.py` — Folium 마커클러스터·팝업 지도
 - `components/tour_card.py` — 관광지 카드·즐겨찾기·상세보기
+- `tests/test_ui_detail.py` — Streamlit AppTest 상세보기 렌더링 검사
 - `tests/` — 자동 테스트
 - `data/jeonnam.csv` — 원본 데이터 (수정하지 않음)
 
@@ -23,6 +27,8 @@
 pip install -r requirements.txt
 streamlit run app.py
 ```
+
+실시간 주변 음식점 검색에는 카카오 REST API 키가 필요합니다. `KAKAO_REST_API_KEY` 환경 변수 또는 Streamlit Secrets에 설정하면 상세 보기에서 반경을 지정해 음식점을 거리순으로 볼 수 있습니다. 키가 없으면 네이버 지도·카카오맵 검색 링크를 계속 사용할 수 있습니다.
 
 ## 테스트
 
@@ -43,6 +49,8 @@ python -m pytest -q
 8. CSV mtime 기반 캐시 무효화 (`@st.cache_data`)
 9. 카드와 테마 CSS, 2열 차트·지도 배치
 10. pytest 데이터·필터·지도좌표 테스트
+11. 선택 관광지 좌표 기준 음식점 반경 검색 (카카오 로컬 API 키 필요)
+12. 새로운 관광 분류 코드도 코드와 함께 화면에 표시
 
 ## 주의사항
 
@@ -59,8 +67,7 @@ python -m pytest -q
 
 ## 확장 자동 테스트 (V2 테스트 보강)
 - 자세한 내용: [TESTING_GUIDE.md](TESTING_GUIDE.md)
-- 53개 pytest 테스트: 기존 8개 + 신규 45개
 - 설치: `python -m pip install -r requirements-dev.txt`
 - 실행: `python -m pytest -q`
 - 커버리지: `python -m pytest --cov=data_service --cov=state --cov=services --cov-report=term-missing`
-- 커버리지 측정 범위는 **데이터/세션/검증/통계 모듈만** 포함하며 Streamlit 브라우저 UI는 포함되지 않습니다.
+- 커버리지 측정은 명령에 지정된 모듈만 포함합니다. AppTest 상세보기 테스트는 별도로 실행됩니다.
