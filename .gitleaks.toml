@@ -1,0 +1,18 @@
+title = "Jeonnam Tour secret detection"
+
+[extend]
+useDefault = true
+
+[[rules]]
+id = "kakao-rest-api-key"
+description = "Hardcoded Kakao REST API key"
+regex = '''(?i)(?:kakao_rest_api_key|kakao[_-]?(?:rest[_-]?)?(?:api[_-]?)?key)["'\]\s]{0,8}[:=]\s*["']?([a-f0-9]{32})\b'''
+secretGroup = 1
+keywords = ["kakao"]
+
+[[rules]]
+id = "kakao-authorization"
+description = "Literal Kakao Authorization credential"
+regex = '''(?i)KakaoAK\s+([a-f0-9]{32})\b'''
+secretGroup = 1
+keywords = ["kakaoak"]
