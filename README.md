@@ -71,3 +71,7 @@ python -m pytest -q
 - 실행: `python -m pytest -q`
 - 커버리지: `python -m pytest --cov=data_service --cov=state --cov=services --cov-report=term-missing`
 - 커버리지 측정은 명령에 지정된 모듈만 포함합니다. AppTest 상세보기 테스트는 별도로 실행됩니다.
+
+## 보안 및 이메일 개인정보 보호
+
+API 키 저장 방법, 로컬 Git 작성자 이메일 설정과 자동 보안 검사는 [SECURITY.md](SECURITY.md)를 참고하세요. 실제 비밀값은 소스에 넣지 않습니다.
