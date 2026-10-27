@@ -10,6 +10,8 @@ class Restaurant:
     distance_m: int | None
     phone: str
     url: str
+    latitude: float | None = None
+    longitude: float | None = None
 
     @classmethod
     def from_api(cls, place: dict) -> "Restaurant":
@@ -20,4 +22,6 @@ class Restaurant:
             distance_m=place.get("distance_m"),
             phone=place.get("phone", ""),
             url=place.get("url", ""),
+            latitude=place.get("latitude"),
+            longitude=place.get("longitude"),
         )
