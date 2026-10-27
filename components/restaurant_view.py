@@ -5,13 +5,14 @@ import streamlit as st
 from config import RESTAURANT_RADIUS_DEFAULT, RESTAURANT_RADIUS_MAX
 from services.restaurant_api import RestaurantSearchError
 from services.restaurant_search import restaurant_search_urls
-from services.restaurant_service import find_restaurants
+from services.restaurant_service import find_restaurants, filter_restaurants
+from components.restaurant_map import render_restaurant_map
 
 
 @st.cache_data(ttl=600, show_spinner=False, max_entries=128)
-def _cached_restaurant_search(latitude, longitude, radius_m, api_key):
+def _cached_restaurant_search(latitude, longitude, radius_m, api_key, page=1):
     """Preserve the existing 10-minute cache and key isolation."""
-    return find_restaurants(latitude, longitude, radius_m, api_key)
+    return find_restaurants(latitude, longitude, radius_m, api_key, page=page)
 
 
 def render_restaurants(tour, api_key=""):
@@ -47,6 +48,7 @@ def _render_restaurant_results(tour, api_key):
                 float(tour["latitude"]), float(tour["longitude"]), radius, api_key
             )
             st.session_state.pop(error_key, None)
+            st.session_state[f'restaurant_page_{record_id}_{radius}'] = 1
         except (RestaurantSearchError, ValueError) as exc:
             st.session_state[error_key] = str(exc)
 
@@ -59,13 +61,35 @@ def _render_restaurant_results(tour, api_key):
         st.info("검색 반경 안에 음식점이 없습니다.")
         return
 
-    st.caption(f"{len(results)}곳을 가까운 순서로 찾았습니다.")
-    for index, place in enumerate(results):
+    st.caption(f"현재 페이지: {len(results)}곳 (가까운 순서)")
+    categories = ["전체"] + sorted({place.category for place in results if place.category})
+    category = st.selectbox("음식점 분류", categories, key=f"restaurant_category_{record_id}_{radius}")
+    distance_limit = st.slider(
+        "목록 거리 필터 (m)", 500, radius, radius, step=500,
+        key=f"restaurant_distance_{record_id}_{radius}",
+    ) if radius >= 500 else radius
+    displayed = filter_restaurants(results, category=category, max_distance_m=distance_limit)
+    st.caption(f"현재 불러온 결과 중 {len(displayed)}곳 표시")
+    render_restaurant_map(tour, displayed, f"restaurant_map_{record_id}_{radius}")
+    for index, place in enumerate(displayed):
         distance = f" · {place.distance_m}m" if place.distance_m is not None else ""
         st.markdown(f"**{place.name}**{distance}")
         st.caption(" · ".join(value for value in (place.category, place.address, place.phone) if value))
         if place.url:
-            st.link_button(
-                "카카오맵에서 보기", place.url,
-                key=f"restaurant_place_{record_id}_{radius}_{index}",
-            )
+            st.link_button("카카오맵에서 보기", place.url, key=f"restaurant_place_{record_id}_{radius}_{index}")
+
+    page_key = f"restaurant_page_{record_id}_{radius}"
+    page = st.session_state.get(page_key, 1)
+    st.caption(f"검색 결과 페이지: {page}")
+    if st.button("다음 15개 더 보기", key=f"restaurant_next_{record_id}_{radius}", disabled=len(results) < 15):
+        try:
+            next_page = page + 1
+            if next_page > 45:
+                st.info("최대 검색 페이지에 도달했습니다.")
+                return
+            more = _cached_restaurant_search(float(tour["latitude"]), float(tour["longitude"]), radius, api_key, next_page)
+            st.session_state[result_key] = results + more
+            st.session_state[page_key] = next_page
+            st.rerun()
+        except (RestaurantSearchError, ValueError) as exc:
+            st.warning(str(exc))
